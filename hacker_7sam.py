@@ -257,7 +257,7 @@ def scan_fivem(known):
                     inspect_file(full, known)
     for f in os.listdir(base):
         if f.lower() in ("dinput8.dll", "d3d9.dll", "version.dll", "winmm.dll"):
-            R["fivem"].append(f"Proxy DLL in FiveM.app (review): {os.path.join(base, f)}")
+            R["fivem"].append(f"Proxy DLL detected in FiveM.app: {os.path.join(base, f)}")
             inspect_file(os.path.join(base, f), known)
 
 
@@ -447,7 +447,7 @@ def scan_memory():
                 if "total suspicious" in line.lower() or "suspicious:" in line.lower():
                     total_match = line.strip()
             verdict = "SUSPICIOUS - possible in-memory injection" if (suspicious and proc.returncode != 0) else \
-                      ("Clean (no anomalies flagged)" if proc.returncode == 0 else "Review needed")
+                      ("Clean (no anomalies flagged)" if proc.returncode == 0 else "Indeterminate")
             R["memory"].append(
                 f"{name} (PID {pid}): {verdict}"
                 + (f"  [{total_match}]" if total_match else "")
@@ -479,7 +479,7 @@ def write_report(known):
     with open(path, "w", encoding="utf-8") as f:
         f.write(f"hacker.7sam - scan report - {NOW:%Y-%m-%d %H:%M}\n")
         f.write(f"Admin: {is_admin()} | Quick: {QUICK} | Known hashes loaded: {len(known)}\n")
-        f.write("NOTE: heuristics only. Verify every item manually.\n\n")
+        f.write("NOTE: findings are heuristic and not conclusive.\n\n")
         for k, t in titles:
             f.write(f"=== {t} ({len(R[k])}) ===\n")
             f.write("\n".join(R[k]) if R[k] else "Nothing found")
@@ -499,7 +499,7 @@ def print_summary():
         print(color + f"  {label:32s}: {len(R[k])}" + RESET)
     print(PURPLE + "-" * 68 + RESET)
     if total_flags > 0:
-        print(RED + "  RESULT: suspicious indicators found - review the report." + RESET)
+        print(RED + "  RESULT: suspicious indicators found." + RESET)
     else:
         print(GREEN + "  RESULT: no strong indicators found at this detection level." + RESET)
     print(PURPLE + "-" * 68 + RESET)
