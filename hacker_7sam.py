@@ -1,25 +1,3 @@
-# -*- coding: utf-8 -*-
-"""
-hacker.7sam  -  FiveM PC Check Scanner (all-in-one)
-Windows 10/11, Python 3.8+, no external libraries required.
-
-Combines:
-  - File/folder name scan
-  - SHA-256 hash matching (known_hashes.txt)
-  - PE metadata inspection (catches renamed files)
-  - In-file string scan
-  - Digital signature check
-  - FiveM folder / plugin scan
-  - Recycle Bin + NTFS USN deleted-files scan (last 24h)
-  - Prefetch (programs run in last 24h)
-  - Running process scan
-  - PE-sieve live memory scan of FiveM/GTA5 (catches fileless injection)
-    -> pe-sieve64.exe is downloaded automatically from its official
-       GitHub releases on first run if not already present.
-
-Read-only tool. Does not delete, modify, or exfiltrate anything.
-Use only on a PC you own or with the owner's explicit, informed consent.
-"""
 import os, sys, csv, io, time, string, struct, hashlib, subprocess, json
 from datetime import datetime, timedelta
 
@@ -33,8 +11,6 @@ PE_SIEVE = os.path.join(HERE, "pe-sieve64.exe")
 PE_SIEVE_API = "https://api.github.com/repos/hasherezade/pe-sieve/releases/latest"
 
 TARGET_PROCESSES = ["fivem_gtaprocess.exe", "gta5.exe", "fivem.exe"]
-
-# ---------- color (purple banner / CMD UI) ----------
 PURPLE = "\033[95m"
 MAGENTA_BOLD = "\033[1;35m"
 CYAN = "\033[96m"
@@ -45,9 +21,8 @@ RESET = "\033[0m"
 
 
 def enable_vt_colors():
-    """Enable ANSI colors in classic Windows cmd.exe (Win10+)."""
     if os.name == "nt":
-        os.system("")  # harmless trick that enables VT100 processing on modern cmd
+        os.system("")
         try:
             import ctypes
             k = ctypes.windll.kernel32
@@ -69,11 +44,7 @@ def banner():
 |_| |_|\__,_|\___|_|\_\___|_|       /____||___/\__,_|_| |_| |_|
 """ + RESET)
     print(MAGENTA_BOLD + "            hacker.7sam  -  FiveM PC Check Scanner" + RESET)
-    print(CYAN + "            Read-only. Full scan + live memory check." + RESET)
     print(PURPLE + "-" * 68 + RESET)
-
-
-# ---------- editable signature lists ----------
 NAME_KEYWORDS = [
     "eulen", "redengine", "red engine", "hammafia", "skript", "lumia", "susano",
     "tzx", "kiddion", "cherax", "x-force", "xforce", "executor", "injector",
@@ -325,7 +296,7 @@ def scan_recycle():
 
 def scan_usn():
     if not is_admin():
-        R["usn"].append("Skipped: run as Administrator to read the USN journal.")
+        R["usn"].append("Skipped: insufficient privileges for USN journal access.")
         return
     for d in drives():
         vol = d[:2]
@@ -378,7 +349,7 @@ def scan_prefetch():
                     flag = " <-- SUSPICIOUS" if kw(f) else ""
                     R["prefetch"].append(f"{m:%Y-%m-%d %H:%M}  {f}{flag}")
     except Exception:
-        R["prefetch"].append("Cannot read Prefetch: run as Administrator.")
+        R["prefetch"].append("Prefetch access unavailable.")
 
 
 def scan_processes():
@@ -391,11 +362,7 @@ def scan_processes():
                 R["processes"].append(f"[{k}] {name}")
     except Exception:
         pass
-
-
-# ---------- PE-sieve: auto-download + live memory scan ----------
 def ensure_pe_sieve():
-    """Download pe-sieve64.exe from the official GitHub releases if missing."""
     if os.path.exists(PE_SIEVE):
         return True
     print(YELLOW + "[*] pe-sieve64.exe not found, downloading from GitHub (hasherezade/pe-sieve) ..." + RESET)
@@ -433,8 +400,6 @@ def ensure_pe_sieve():
             return True
     except Exception as e:
         print(RED + f"[!] Auto-download failed: {e}" + RESET)
-        print(YELLOW + "    Download manually from: github.com/hasherezade/pe-sieve/releases "
-                        f"and place pe-sieve64.exe in: {HERE}" + RESET)
     return False
 
 
@@ -457,14 +422,14 @@ def find_target_pids():
 
 def scan_memory():
     if not is_admin():
-        R["memory"].append("Skipped: run as Administrator for memory scanning (PE-sieve needs it).")
+        R["memory"].append("Skipped: insufficient privileges for memory scanning.")
         return
     if not ensure_pe_sieve():
         R["memory"].append("Skipped: pe-sieve64.exe unavailable (download failed, see console).")
         return
     pids = find_target_pids()
     if not pids:
-        R["memory"].append("No running FiveM/GTA5 process found. Start the game, then re-run the scan.")
+        R["memory"].append("No running FiveM/GTA5 process found.")
         return
     for pid, name in pids:
         print(CYAN + f"[*] Memory-scanning {name} (PID {pid}) with PE-sieve ..." + RESET)
@@ -543,13 +508,11 @@ def print_summary():
 def main():
     enable_vt_colors()
     banner()
-    print(YELLOW + "Read-only tool. Scans files, memory and recent activity, writes a report to Desktop." + RESET)
-    print(YELLOW + "Use only on a PC you own or with the owner's explicit, informed consent.\n" + RESET)
     if not is_admin():
-        print(RED + "[!] Not running as Administrator: USN/Prefetch/memory scan will be limited." + RESET)
+        print(RED + "[!] Limited privileges: USN, Prefetch, and memory scans may be incomplete." + RESET)
     known = load_hashes()
     if not known:
-        print(YELLOW + f"[!] No hashes loaded. Add SHA-256 lines to: {HASH_FILE}" + RESET)
+        print(YELLOW + "[!] No known hashes loaded." + RESET)
     t = time.time()
     scan_fivem(known)
     scan_processes()
@@ -561,7 +524,6 @@ def main():
     p = write_report(known)
     print_summary()
     print(GREEN + f"\nDone in {int(time.time() - t)}s. Report saved to: {p}" + RESET)
-    input("\nPress Enter to exit...")
 
 
 if __name__ == "__main__":
