@@ -45,6 +45,8 @@ def banner():
 """ + RESET)
     print(MAGENTA_BOLD + "            hacker.7sam  -  FiveM PC Check Scanner" + RESET)
     print(PURPLE + "-" * 68 + RESET)
+
+
 NAME_KEYWORDS = [
     "eulen", "redengine", "red engine", "hammafia", "skript", "lumia", "susano",
     "tzx", "kiddion", "cherax", "x-force", "xforce", "executor", "injector",
@@ -362,6 +364,8 @@ def scan_processes():
                 R["processes"].append(f"[{k}] {name}")
     except Exception:
         pass
+
+
 def ensure_pe_sieve():
     if os.path.exists(PE_SIEVE):
         return True
