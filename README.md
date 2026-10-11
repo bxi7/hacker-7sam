@@ -1,23 +1,23 @@
 # hacker.7sam — FiveM PC Check Scanner
 
-أداة فحص محلية لأجهزة Windows 10/11 تبحث عن مؤشرات مرتبطة بالغش في FiveM/GTA V. النتائج إرشادية وقد تتضمن إنذارات خاطئة؛ راجع كل نتيجة يدوياً.
+A Windows utility that scans for potential cheat-related indicators in FiveM and GTA V files, processes, and recent system activity. Findings are heuristic and may include false positives; review each result manually.
 
-## المتطلبات
+## Requirements
 
-- Windows 10/11
-- Python 3.8 أو أحدث
-- بعض الفحوصات (USN وPrefetch وفحص الذاكرة) تكون محدودة دون تشغيل الطرفية كمسؤول.
+- Windows 10 or 11
+- Python 3.8 or newer
+- Administrator privileges are required for some USN, Prefetch, and memory checks.
 
-## التشغيل
+## Usage
 
 ```powershell
 python .\hacker_7sam.py
 ```
 
-التقرير النصي يُحفظ على سطح المكتب. يمكن إضافة بصمات SHA-256 معروفة في `known_hashes.txt` بجانب السكربت، بصمة واحدة في كل سطر، ويمكن إضافة وصف بعدها.
+The report is saved to the Desktop. To enable known-hash matching, add SHA-256 entries to `known_hashes.txt` in the same folder as the script. Use one hash per line; an optional description may follow the hash.
 
-عند غياب `pe-sieve64.exe`، تحاول الأداة تنزيله من أحدث إصدار في مستودع PE-sieve الرسمي، ثم تستخدمه لفحص ذاكرة عمليات FiveM/GTA V. لا تشغّل الأداة إلا على جهاز تملكه أو لديك موافقة صريحة ومستنيرة لفحصه.
+When `pe-sieve64.exe` is not present, the scanner downloads it from the latest release in the official [PE-sieve repository](https://github.com/hasherezade/pe-sieve/releases) and uses it for live memory scanning. Review downloaded files before running the scanner with elevated privileges.
 
-## تنبيه
+## Scope and limitations
 
-هذه الأداة لا تحذف الملفات أو ترسل نتائج الفحص. الفحص قائم جزئياً على قواعد استدلالية وليس إثباتاً قاطعاً للغش. راجع المصدر والملفات التي تُنزّلها قبل التشغيل، خصوصاً عند التشغيل بصلاحيات المسؤول.
+The scanner does not delete files or transmit scan results. It combines filename, metadata, hash, string, signature, FiveM plugin, process, Prefetch, Recycle Bin, NTFS USN journal, and memory checks. Detection relies partly on heuristics and does not prove that a system is clean or that a user cheated.
